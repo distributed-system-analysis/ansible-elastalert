@@ -1,4 +1,18 @@
 ---
-- hosts: tests
+- hosts: test
+  user: root
   roles:
-  - role: dochang.docker
+  - role: dochang.docker 
+  vars:
+    - files_dir: "{{ FILES_DIR|default('/tmp') }}" 
+    - elast_host: "{{ ELAST_PORT|default('elasticsearch.perf.lab.eng.BOS.redhat.com') }}" 
+    - elast_port: "{{ ELAST_PORT|default('80') }}"
+  tasks:
+    - name: create config.yaml and rules directory
+      file: path=/tmp/rules state=directory
+      file: path=/tmp/config.yaml state=touch 
+    - name: pull the image
+      shell: docker pull nael4746/elastalert
+    - name: run the container
+      shell: docker run -d --name=elastalert -v "{{ files_dir }}"/config.yaml:/opt/elastalert/config.yaml -v "{{ files_dir }}"/rules:/opt/elastalert/rules -e " ELASTICSEARCH_HOST="{{ elast_host }}"" -e "ELASTICSEARCH_PORT="{{ elast_port }}"" nael4746/elastalert
+     
